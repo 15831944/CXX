@@ -1,4 +1,5 @@
 #include <iostream>
+#include <algorithm>
 #include <memory>
 #include <string>
 using namespace std;
@@ -10,5 +11,7 @@ int main()
     {
         cout<<*p<<endl;
     }
+    vector<int>vec={-2,1,4,32,45,6,67};
+    for_each(vec.begin(),vec.end(),[](int i){cout<<i<<" ";});
     return 0;
 }
