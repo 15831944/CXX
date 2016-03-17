@@ -1,0 +1,13 @@
+LDFLAGS= -g -ltest
+
+SRCS= main.cpp functions.cpp
+OBJS = main.o functions.o
+
+all: main
+main: $(OBJS) libtest.so
+	$(CXX) $(LDFLAGS) -o main $(OBJS)
+main.o: main.cpp functions.h 
+functions.o: functions.h functions.cpp
+
+clean:
+	$(RM) $(OBJS) main

@@ -1,0 +1,10 @@
+CFLAGS= -O2 -g -std=c++11
+LDFLAGS= -fPIC -shared
+OBJS = get.o
+TARGET=libggg.so
+$(TARGET):$(OBJS)
+	$(CXX) get.cpp $(LDFLAGS)  $(CFLAGS) -o $(TARGET)
+#$(OBJS):get.cpp
+#	$(CXX)  get.cpp -o $(OBJS) $(CFLAGS)
+clean:
+	$(RM)  $(TARGET)
