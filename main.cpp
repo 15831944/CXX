@@ -1,6 +1,6 @@
 #include <iostream>
 #include <string>
-//#include <aaa.h>
+#include <aaa.h>
 #include <vector>
 #include <libaio.h>
 #include <unistd.h>
@@ -46,56 +46,63 @@ using namespace std;
 //char* addr = (char*)memalign(bufsize,bufsize*5);
 int main()
 {
-	//	Center cen(5,1024*2);
-	//	cen.start();
-	//	cen.aiosubmit();
-
+	Center cen(5,1024*5);
+	cen.start();
+	cen.aiosubmit();
+	cen.aioreap();
 
 	//	cen.testBuffer();
 	//	std::vector<struct iocb> iocbArray;
 	//	iocbArray.reserve(32);
 	//	std::vector<struct iocb*> iocbs;
 	//	iocbs.reserve(32);
-		int srcfd,dstfd,rc;
-		io_context_t ctx;
-		memset(&ctx,0,sizeof(ctx));
-		const char* filename = "hello.txt";
-		struct io_event eve;
-		struct timespec timeout;
-		rc = io_setup(10,&ctx);
-		if (rc!=0){
-			cout<<"io_setup: "<<strerror(errno)<<endl;
-			return -1;
-		}
-		srcfd = ::open(filename,O_RDONLY,0777);
-		if (srcfd<0) {perror("open error");io_destroy(ctx);}
-		size_t nread = -1;
-		size_t id = 0;
-		char* addr = (char*)memalign( 1024, 1024*5 );
-		char* buff = new char[1024*10];
-		std::vector<struct iocb>iocbArray;
-		iocbArray.reserve(32);
-		std::vector<struct iocb*>iocbs;
-		iocbs.reserve(32);
-		struct iocb* cb = &iocbArray[0];
-		io_prep_pread(cb,srcfd,buff,1024*5,0);
-		cb->data = buff;//reinterpret_cast<void*>((*it)->ptr); ??????
-		iocbs[0] = cb;
-	
-		rc = io_submit(ctx, 1, &iocbs[0]); 
-		if (rc != 1)
-		{
-			cout<<"msg: "<<strerror(errno)<<endl;
-		}
-		struct io_event events[ 1024];
-		rc = io_getevents( ctx, 1,1024, events, NULL );
-		cout<<"finish io_getevents"<<endl;
-		for  (int i = 0;i<rc;i++)
-		{
 
-		//	char* ptr = reinterpret_cast<char*>(events[i].data);
-			cout<<reinterpret_cast<char*>(events[i].data)<<endl;
-		}
+	//int srcfd,dstfd,rc;
+	//io_context_t ctx;
+	//memset(&ctx,0,sizeof(ctx));
+	//const char* filename = "TianShanBuild.sln";
+	//struct io_event eve;
+	//struct timespec timeout;
+	//rc = io_setup(10,&ctx);
+	//if (rc!=0){
+	//	cout<<"io_setup: "<<strerror(errno)<<endl;
+	//	return -1;
+	//}
+	//srcfd = ::open(filename,O_RDONLY,0777);
+	//if (srcfd<0) {perror("open error");io_destroy(ctx);}
+	//size_t nread = -1;
+	//size_t id = 0;
+	//char* addr = (char*)memalign( 1024, 1024*5 );
+	//std::vector<struct iocb>iocbArray;
+	//iocbArray.reserve(32);
+	//std::vector<struct iocb*>iocbs;
+	//iocbs.reserve(32);
+
+	//for (int i = 0;i<3;i++){
+	//	struct iocb* cb = &iocbArray[i];
+	//	io_prep_pread(cb,srcfd,&addr[i*1024],1023,1023*i);
+	//	cb->data = &addr[i*1024];//reinterpret_cast<void*>((*it)->ptr); ??????
+	//	iocbs[i] = cb;
+	//}
+	//rc = io_submit(ctx, 3, &iocbs[0]); 
+	//if (rc != 1)
+	//{
+	//	cout<<"msg: "<<strerror(errno)<<endl;
+	//}
+	//struct io_event events[1024];
+	//rc = io_getevents( ctx, 1,1024, events, NULL );
+	//cout<<"finish io_getevents"<<endl;
+	//for  (int i = 0;i<rc;i++)
+	//{
+
+	//	//	char* ptr = reinterpret_cast<char*>(events[i].data);
+	//	printf("event[%d]\n",i+1);
+	//	cout<<reinterpret_cast<char*>(events[i].data)<<endl;
+	//	cout<<strlen(reinterpret_cast<char*>(events[i].data))<<endl;
+	//}
+
+
+
 	//first step
 	//while (nread)
 	//{
@@ -228,14 +235,14 @@ int main()
 	//if(io_setup(10,&ctx)!=0){printf("io_setup error\n");exit(1);}
 	//infile = ::open("hello.txt",O_RDONLY);
 	//vector<Buffer*>
-////	io_context_t ctx;
-////	int rc;
-////	memset(&ctx,0,sizeof(ctx));
-////	rc = io_setup(10,&ctx);
-////	if (rc != 0){
-////		cout<<"io_setup: "<<strerror(errno)<< rc<<endl;
-////		return -1;
-////	}
+	////	io_context_t ctx;
+	////	int rc;
+	////	memset(&ctx,0,sizeof(ctx));
+	////	rc = io_setup(10,&ctx);
+	////	if (rc != 0){
+	////		cout<<"io_setup: "<<strerror(errno)<< rc<<endl;
+	////		return -1;
+	////	}
 
 	return 0;
 }
