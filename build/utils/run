@@ -1,0 +1,68 @@
+#!/bin/bash
+
+service=
+path="/opt/TianShan/bin/"
+delay=10
+count=10
+
+trap "killproc && exit" INT
+
+usage() {
+    echo 
+    echo "-s <name>   specify the service to run"
+    echo "-p <path>   specify image path"
+    echo "-d <second> how long will the program survive"
+    echo "-c <count>  number of test rounds"
+    echo "-h          show this help" 
+    echo
+}
+
+killproc() {
+	pid=$(pidof ${service})
+	if [ $? -ne 0 ]; then return 1; fi
+	kill ${pid}
+	wait ${pid}
+}
+
+while getopts ":s:p:d:c:h" opt; do
+    case ${opt} in
+    s) service=${OPTARG};;
+    p) path=${OPTARG};;
+    d) delay=${OPTARG};;
+    c) count=${OPTARG};;
+    h) usage; exit 0;;
+    \?) echo "invalid parameters"; usage; exit 1;;
+    esac
+done
+
+if [ -z "$*" -o -z "${service}" ]; then
+	echo "must specify a service name"
+	usage
+	exit 1
+fi
+
+image="${path}/${service}"
+arg="-s ${service}"
+
+if [ ! -x "${image}" ]; then
+	echo "not a valid service image: " ${image}
+	exit 1
+fi
+
+round=0
+while test ${round} -lt ${count}; do
+
+	nohup ${image} ${arg} >/dev/null &
+
+	sleep ${delay}
+
+	killproc
+
+	if [ $? -ne 0 ]; then exit 1; fi
+	
+	let "round++"
+	echo "round ${round}"
+
+	sleep 1
+
+done

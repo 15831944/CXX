@@ -1,0 +1,4 @@
+/opt/cdmifuse/bin/libZQCommon.so.2.0.0.1           /opt/cdmifuse/bin/libZQCommon.so
+/opt/cdmifuse/bin/libcurl.so.4.3.0                 /opt/cdmifuse/bin/libcurl.so.4
+/opt/cdmifuse/etc/cdmifuse.sh                      /etc/init.d/cdmifuse
+opt/cdmifuse/bin/cdmifuse.8.0.0.1                      /opt/cdmifuse/bin/cdmifuse

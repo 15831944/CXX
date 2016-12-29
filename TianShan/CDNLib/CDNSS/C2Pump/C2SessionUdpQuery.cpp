@@ -1,0 +1,299 @@
+#include <ZQ_common_conf.h>
+#include <sys/types.h>
+#include "C2StreamerEnv.h"
+#include "C2StreamerService.h"
+#include "C2SessionHelper.h"
+#include "C2SessionUdpQuery.h"
+
+#include <libasync/http.h>
+
+#if defined ZQ_OS_MSWIN
+    #define REQFMT(x,y)     CLOGFMT(x, " REQUEST[%s]\t"##y), request->requestHint.c_str()
+#elif defined ZQ_OS_LINUX
+    #define REQFMT(x,y)     CLOGFMT(x, " REQUEST[%s]\t"y), request->requestHint.c_str()
+#endif
+
+namespace C2Streamer{
+
+class IndexDataReader;
+
+//class IndexDataGotten : public IAsyncNotifySinker {
+//public:
+//typedef ZQ::common::Pointer<IndexDataGotten> Ptr;
+//	IndexDataGotten( IdxReaderPtr	reader )
+//	:mReader(reader) {
+//	  assert(mReader != NULL);
+//	}
+//
+//	protected:
+//	  virtual void onNotified() {
+//		  mReader->postAsyncWork();
+//	  }
+//private:
+//	IdxReaderPtr mReader;
+//};
+class IndexDataGotten : public IAsyncNotifySinker {
+	public:
+		typedef ZQ::common::Pointer<IndexDataGotten> Ptr;
+		IndexDataGotten( ZQ::common::Semaphore& sem )
+		:mSema(sem) {}
+		virtual ~IndexDataGotten() {}
+	protected:
+		virtual void onNotified() {
+//			MLOG.INFO(CLOGFMT(IndexDataGotten,"onNotified()"));
+			mSema.post();
+		}
+	private:
+		ZQ::common::Semaphore&      mSema;
+};
+
+IndexDataReader::IndexDataReader( C2StreamerEnv& env, C2Service& svc )
+:LibAsync::AsyncWork( LibAsync::getLoopCenter().getLoop()),
+mEnv(env),
+mSvc(svc),
+mIndexData(NULL),
+mbParsed(false),
+mbFirstTry(true),
+mOffset(0),
+mAioFile(NULL)
+{
+  mIdxParserEnv.AttchLogger(env.getLogger());
+  mLoop = &getLoop();
+  assert(mLoop != NULL);
+}
+
+IndexDataReader::~IndexDataReader()
+{
+  if(mIndexData){
+      free(mIndexData);
+      mIndexData = NULL;
+  }
+  if(mLoop) {
+	  mLoop->decreateSockCount();
+  }
+}
+
+bool IndexDataReader::findSubfileInfo( INOUT float& scale, OUT std::string& subFileExt, int64& playTime) {
+  uint32 duration = 0;
+  subFileExt = mIdxRecPtr->getSubfileExt(scale, duration);
+  playTime = duration * scale;
+  return true;
+}
+
+int64 IndexDataReader::findDataOffset( INOUT int64& timeOffset, float scale ) {
+	uint64 tmpTimeOffset = timeOffset;
+	int idx = 0;
+	int64 dataOffset = (int64)mIdxRecPtr->findNextIFrameByTimeOffset( tmpTimeOffset, idx, scale );
+	timeOffset = (int64)tmpTimeOffset;
+	return dataOffset;
+}
+
+int64 IndexDataReader::getDataBitrate() const
+{
+	return mIdxRecPtr->getdatabitrate();
+}
+
+void  IndexDataReader::rewriteRecords(const IdxRecPtr& ptr)
+{
+	mIdxRecPtr->rewriteRecords(*ptr);
+}
+
+int32 IndexDataReader::parse( const std::string& assetName, int readertype )
+{
+	bool bNew = true;
+
+	if(!mIdxRecPtr) {
+		mIdxRecPtr = mSvc.getCacheCenter().getIdxRecByIdxName(assetName, bNew);
+	} else {
+		bNew = false;
+	}
+
+	if (mIdxRecPtr->IsParsed()){
+		if(bNew) {
+			mIdxRecPtr->signal();
+		}
+		return mLastErrorCode;
+	}
+
+	if (!bNew){
+		mIdxRecPtr->wait(); //wait for completion of index parsing
+		return mLastErrorCode;
+	}
+	std::string idxfilename = assetName + ".index";
+
+	mAioFile = mSvc.getCacheCenter().open(idxfilename, readertype);
+	if (!mAioFile){
+		mIdxRecPtr->signal();
+		mLastErrorCode = errorCodeBadRequest;
+		return mLastErrorCode;
+	}
+	mAssetName = assetName;
+	parseIndex( );
+	mIdxRecPtr->wait();
+	return mLastErrorCode;
+}
+
+static int64 max_index_size = 8 * 1024 * 1024;
+
+void IndexDataReader::onAsyncWork() {
+	if(mbFirstTry) {
+		if(mIndexData) {
+			free(mIndexData);
+			mIndexData = NULL;
+		}
+		mIndexData = (char*)malloc( max_index_size);
+		mOffsetInBuffer = 8 * 1024;// 8k for the first read
+		mbFirstTry = false;
+	}
+	if(!mIndexData) {
+		MLOG.error(CLOGFMT(IndexDataReader,"parseIndex not enough memory"));
+		mLastErrorCode = errorCodeInternalError;
+		return;
+	}
+	readNext();
+}
+
+void IndexDataReader::readNext() {
+	IndexDataGotten::Ptr cb = new IndexDataGotten(mSema);
+	mOffset = 0;
+	while(mOffset < max_index_size) {
+		mBu = mAioFile->read(mOffset);
+		if(!mBu.valid()) {
+			mLastErrorCode = errorCodeInternalError;
+			//mIdxRecPtr->signal();
+			return;
+		}
+		if(mBu.asyncWait(cb, 0x7FFFFFFF)) {
+			MLOG.info(CLOGFMT(IndexDataReader,"got index data"));
+			mSema.wait();
+			//return;// data not available, cb will be invoked
+		}
+		if( mBu.lastError() != 0 ) {
+			MLOG.error(CLOGFMT(IndexDataReader, "failed to read[%s]'s index, error[%d/%d]"),
+					mAssetName.c_str(), mBu->errCategory(), mBu->errCode());
+			mLastErrorCode = errorCodeInternalError;
+			break;
+		}
+		if(mBu.dataLeft() ==0)
+			break;
+
+		//size_t dataAvail = mBu.dataLeft();
+		//if(dataAvail == 0) {
+		//	M//LOG.info(CLOGFMT(IndexDataReader,"maybe reach the end of asset[%s]'s index"),
+		//			mAssetName.c_str());
+		//	mIdxRecPtr->signal();
+		//	break;//log here
+		//}
+		//if(dataAvail > (size_t)(max_index_size - mOffset)) {
+		//	dataAvail = (size_t)(max_index_size - mOffset);
+		//}
+		memcpy(&mIndexData[mOffset], mBu.data(), mBu.dataLeft());
+		mOffset += mBu.dataLeft();
+		mOffsetInBuffer = (mOffset + 128) % mBu.bufferSize();//advance 128 byte each time
+		mBu.advance(mBu.dataLeft());
+	}
+		ZQ::IdxParser::IndexFileParser parser(mIdxParserEnv);
+		int32 errorCode = errorCodeInternalError;
+		if( ( errorCode = parser.ParseIndexRecodFromMemoryPWE(mAssetName, *mIdxRecPtr, mIndexData, mOffset)) != errorCodeOK){
+			MLOG.error(CLOGFMT( IndexDataReader, "failed to parse index of [%s],errCode[%d]"), mAssetName.c_str(), errorCode);
+
+			if (errorCodeNotFull == errorCode) {
+				rewriteRecords(mIdxRecPtr);
+				mIdxRecPtr->signal();
+			} else {
+				mLastErrorCode = errorCode;
+				mIdxRecPtr->signal();
+				return;
+			}
+		}
+		else{
+			mIdxRecPtr->signal();
+		}
+	mAioFile->close();
+}
+
+int32 IndexDataReader::parseIndex(){
+	mLastErrorCode = errorCodeOK;
+	postAsyncWork();
+	return errorWorkingInProcess;
+}
+
+
+C2UdpInfoQuery::C2UdpInfoQuery(C2StreamerEnv& env, C2Service& svc)
+:mEnv(env),
+mSvc(svc)
+{}
+
+C2UdpInfoQuery::~C2UdpInfoQuery()
+{
+}
+
+IdxReaderPtr C2UdpInfoQuery::findReaderByLRUMap(const std::string& assetname, bool& bNew)
+{
+	IdxReaderPtr pIdxReader = NULL;
+	ZQ::common::MutexGuard gd(mLocker);
+	pIdxReader = IdxReaderMap[assetname];
+	if (!pIdxReader){
+		bNew = true;
+	    pIdxReader = new IndexDataReader(mEnv,mSvc);
+	    assert(pIdxReader);
+		pIdxReader->SetUnParsed();
+	    IdxReaderMap[assetname] = pIdxReader;
+	}else{
+		bNew = false;
+		return pIdxReader;
+	}
+	return pIdxReader;
+}
+
+IdxReaderPtr  C2UdpInfoQuery::getIdxReaderByAssetName(const std::string& assetname, bool& bNew)
+{
+	IdxReaderPtr readerPtr = findReaderByLRUMap(assetname,bNew);
+	assert(readerPtr != NULL);
+	if (!bNew){
+		readerPtr->wait();
+	}
+	return readerPtr;
+}
+
+int32   C2UdpInfoQuery::UdpInfoQuery(const SessionUdpControlRequestParamPtr request, SessionUdpControlResponseParamPtr response)
+{
+	MLOG(ZQ::common::Log::L_INFO, CLOGFMT(UdpInfoQuery,"C2Service::UdpInfoQuery"));
+	if (request->subSessionId == 0){
+		IdxReaderPtr reader = NULL;
+		bool bNew = true;
+	    int readerType = request->getConfUrlRule()->readerType;
+	    int32 result = errorCodeOK;
+	    response->filename = request->assetName;
+	    reader = getIdxReaderByAssetName(request->assetName,bNew);
+		assert(reader != NULL);
+		if (bNew){
+			result = reader->parse(response->filename, readerType);
+			reader->signal();
+		}else{
+	          ///
+		}
+		if (result != errorCodeOK){
+			return result;
+		}
+		std::string ext;
+		response->scale = 1.0;
+	    reader->findSubfileInfo(response->scale,ext,response->duration);
+	    MLOG.info(CLOGFMT(udpInfoQuery, "get info for unloaded item: filename[%s] scale[%f] duration[%ld]"),response->filename.c_str(),response->scale, response->duration);
+	    return errorCodeOK;
+	}
+	return 0;
+}
+
+IdxReaderPtr C2UdpInfoQuery::parse( const std::string& assetName, int32 readerType) {
+	bool bNew = true;
+	IdxReaderPtr reader = getIdxReaderByAssetName(assetName, bNew);
+	assert(reader != NULL);
+	if(bNew) {
+		reader->parse(assetName, readerType);
+		reader->signal();
+	}
+	return reader;
+}
+
+}//namespace C2Streamer

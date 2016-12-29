@@ -1,0 +1,55 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+# Sample debian/rules that uses debhelper.
+# This file was originally written by Joey Hess and Craig Small.
+# As a special exception, when this file is copied by dh-make into a
+# dh-make output file, you may use that output file without restriction.
+# This special exception was added by Craig Small in version 0.37 of dh-make.
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+#CDMIFUSE_VERSION=2.0.0.1
+
+#export CDMIFUSE_VERSION=2.0.0.1
+
+CURRENT_WORK_DIR=$(shell pwd)
+WORK_BIN_PATH=$(CURRENT_WORK_DIR)/debian/cdmifuse/opt/cdmifuse/bin
+WORK_ETC_PATH=$(CURRENT_WORK_DIR)/debian/cdmifuse/opt/cdmifuse/etc
+
+
+%:
+	dh $@ 
+
+override_dh_auto_clean:
+#	$(MAKE) -C $(ZQProjsPath)/build clean
+	dh_auto_clean
+
+override_dh_auto_build:
+	$(MAKE) -C $(ZQProjsPath)/build CdmiFuse debugfile=$(CDMIFUSE_DEBUG_FILE) version=$(CDMIFUSE_VERSION)
+
+override_dh_auto_install:
+	mkdir -p $(CURRENT_WORK_DIR)/debian/cdmifuse/opt/cdmifuse/etc 
+	mkdir -p $(CURRENT_WORK_DIR)/debian/cdmifuse/opt/cdmifuse/bin
+	mkdir -p $(CURRENT_WORK_DIR)/debian/cdmifuse/opt/cdmifuse/logs
+	mkdir -p $(CURRENT_WORK_DIR)/debian/cdmifuse/opt/cdmifuse/mountpoint
+	mkdir -p $(CURRENT_WORK_DIR)/debian/cdmifuse/etc/init.d/
+	cp $(ZQProjsPath)/Generic/CdmiFuse/linux/cdmifuse.sh                      $(WORK_ETC_PATH) 
+	cp $(ZQProjsPath)/Generic/CdmiFuse/linux/initd_funcs                      $(WORK_ETC_PATH)
+	cp $(ZQProjsPath)/Generic/CdmiFuse/linux/cdmifuse.conf                    $(WORK_ETC_PATH)/cdmifuse_sample.conf 
+	cp $(ZQProjsPath)/Generic/CdmiFuse/linux/cdmifuse.$(CDMIFUSE_VERSION)     $(WORK_BIN_PATH) 
+	cp $(ZQProjsPath)/Common/libZQCommon.so.$(CDMIFUSE_VERSION)               $(WORK_BIN_PATH)
+	cp /opt/sdk//3rdPartyKits/curl/lib/libcurl.so.4.3.0                       $(WORK_BIN_PATH)
+	cp $(ZQProjsPath)/Generic/CdmiFuse/linux/*.py				  $(WORK_BIN_PATH)	
+	rm -f $(CURRENT_WORK_DIR)/debian/cdmifuse.links
+	echo "/opt/cdmifuse/bin/cdmifuse.$(CDMIFUSE_VERSION)                      /opt/cdmifuse/bin/cdmifuse">>$(CURRENT_WORK_DIR)/debian/cdmifuse.links
+	echo "/opt/cdmifuse/bin/libcurl.so.4.3.0                                  /opt/cdmifuse/bin/libcurl.so.4">>$(CURRENT_WORK_DIR)/debian/cdmifuse.links
+	echo "/opt/cdmifuse/bin/libZQCommon.so.$(CDMIFUSE_VERSION)                /opt/cdmifuse/bin/libZQCommon.so">>$(CURRENT_WORK_DIR)/debian/cdmifuse.links
+	echo "/opt/cdmifuse/etc/cdmifuse.sh $$""1">>$(CURRENT_WORK_DIR)/debian/cdmifuse/etc/init.d/cdmifuse
+	chmod +x $(WORK_ETC_PATH)/cdmifuse.sh
+	chmod +x $(CURRENT_WORK_DIR)/debian/cdmifuse/etc/init.d/cdmifuse
+	chmod +x $(CURRENT_WORK_DIR)/debian/cdmifuse/opt/cdmifuse/bin/fuseshell.py
+
+override_dh_gencontrol:
+	dh_gencontrol --dpkg-gencontrol-params=-v$(CDMIFUSE_VERSION)
+#	chmod +x $(WORK_ETC_PATH)/cdmifuse

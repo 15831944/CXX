@@ -1,0 +1,34 @@
+#!/bin/bash
+
+pkg_name="TianShan-sdk-x86_64"
+
+tmpdir=$(pwd)
+
+# base dir of sdk
+sdks="ice boost snmp expat"
+
+# package needed to extract files
+ice="ice-c++-devel ice"
+boost="boost-devel boost"
+expat="expat-devel expat"
+snmp="net-snmp-devel net-snmp-libs net-snmp-utils"
+
+# sdk dirs
+sdk_dirs="include lib64 bin"
+
+for sdk in ${sdks}; do
+	for dir in ${sdk_dirs}; do 
+		curr_dir=${tmpdir}/${sdk}/${dir}
+		mkdir -pv ${curr_dir}
+		echo ${!sdk}
+		for p in ${!sdk}; do
+			rpm -ql ${p} | grep "/${dir}/" | xargs -I'{}' cp -Pv '{}' ${curr_dir}
+		done
+	done
+done
+
+tar cvjf ${pkg_name}.tar.bz2 ${sdks}
+
+rm -rvf ${sdks}
+
+# vim:ts=4 sw=4 bg=dark

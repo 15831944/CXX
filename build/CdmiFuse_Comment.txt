@@ -1,0 +1,4 @@
+CdmiFuse 的版本号跟TianShan是一起的，所以查找histroy的时候，请按照相应版本号检查TianShan 这个project。
+cdmifuse 编译的时候把profiles_cdmi.pl copy成profiles.pl
+command:
+ZQAutobuild.bat --project=TianShan

@@ -1,0 +1,110 @@
+#!/bin/bash
+
+usage() {
+	echo 
+    echo "-f <path>    file contains a list of files to be patched"
+    echo "-p <package> original zip package"
+    echo "-o <path>    output path of the patch package, defaults to current"
+    echo "-h           show this help" 
+    echo
+}
+
+filelist=filelist
+package=
+output=./
+
+while getopts "f:o:p:v:h" opt; do
+    case ${opt} in
+    f) filelist=${OPTARG};;
+	p) package=${OPTARG};;
+	o) output=${OPTARG};;
+    h) usage; exit 0;;
+    \?) echo "invalid parameters"; usage; exit 1;;
+    esac
+done
+
+if [ -z ${package} ]; then
+	echo "no package specified" 
+	usage
+	exit 1
+fi
+
+if [ ! -f ${filelist} ]; then
+	echo "no such file '${filelist}'" 
+	usage
+	exit 1
+fi
+
+patchroot=/var/tmp/patchroot
+
+tmpfile=/tmp/-tmp-
+cat ${filelist} | while read file; do
+	unzip -o ${package} ${file} -d ${patchroot}
+	if [ $? -ne 0 ]; then
+		echo ${file} > ${tmpfile}
+		exit 1;
+	fi
+
+	files="${files} ${file}"
+	echo ${files} > ${tmpfile}
+done
+
+isok=$?
+files="$(cat ${tmpfile})"
+if [ ${isok} -ne 0 ]; then
+	echo "failed to unpack file: ${files}"
+	rm -vf ${tmpfile}
+	exit 1
+fi
+
+rm -vf ${tmpfile}
+
+spec=/tmp/rpmpatch.spec
+
+v1=${package#*-}
+v2=${v1%.*}
+v3=${v2%.*}
+
+version=${v3%-*}
+release=${v3#*-}
+product=TianShan-patch
+arch=$(uname -m)
+package=${product}-${version}-${release}.${arch}.rpm
+
+echo -e "
+Name:      ${product}
+Version:   ${version}
+Release:   ${release}
+Summary:   patch
+Group:     Application/System
+License:   commercial
+BuildArch: ${arch}
+BuildRoot: ${patchroot}
+%define _rpmdir      %(echo ${output})
+%define _rpmfilename %(echo ${package})
+%description
+ZQ Stream Server
+%post
+for f in $files; do
+if [ "\${f%%%%.so.*}" = "\${f}" ]; then
+	link=\${f%%%%.*}
+	ln -sf /\${f} /\${link}
+else 
+	link=\${f%%%%.so.*}
+	ln -sf /\${f} /\${link}.so
+fi
+done
+%clean
+rm -rvf ${patchroot}
+%files
+/*" > ${spec}
+
+CMD=
+if [ $(id -u) -ne 0 ]; then
+    CMD=sudo
+fi
+
+${CMD} rpmbuild -bb ${spec}
+
+rm -vf ${spec}
+

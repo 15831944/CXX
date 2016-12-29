@@ -1,0 +1,32 @@
+
+<Configuration>
+	<Self File="AxCrypt.exe" />
+	<Copyright>Copyright © 2002-2004 Svante Seleborg, All Rights Reserved.</Copyright>
+	<CompanyName>Axantum Software AB</CompanyName>
+	<InternalName>axcrypt</InternalName>
+	<ExternalName>AxCrypt</ExternalName>
+	<RegistryPath>Software\\Axon Data\\AxCrypt</RegistryPath>
+	<ProgramName>AxCrypt.exe</ProgramName>
+	<MessagesName>AxCryptM.dll</MessagesName>
+	<ShellExtName>AxCrypt.dll</ShellExtName>
+	<ProgramIconName>Program.ico</ProgramIconName>
+	<Signature File="AxCrypt.exe" >f71ff9b7ace2967859faab7a848df6345726230aa94930b0e665258769e6363bbc26924f
+11075ea7befef172ebd0931c7a5635e57c75a27c63e3e7b9f74a10a63db38fc0ccda9451
+283237a7b90193825c5fd452213544383cd6cd1eb5d7fa8c</Signature>
+	<Signature File="AxCryptM.dll" >d52310d54e30c7b9809b39bb1aace07d34d09e30f4c1fb010961bbaf5ac4a0a0187977c6
+312e7bd2c791355b99ef78dce47bbf1a751c3a8bbfcc7184160472fb17106e7a1c09d4d2
+8f83461e4ba4aa28497551cde0406343cfdec49a89327a8f</Signature>
+	<Signature File="AxCrypt.dll" >6c0bad67d92f2bc048fd6ca3d29f4de10885510bedc641831a122d12f5b472e6514f4ab9
+aa3efddbf54ef618e6611a64158f33447090868f45e999ba738c7521fb562d325e252614
+c92865bd6633884aa0925b08a54404b761da14c19768a584</Signature>
+	<Restrictions Uses="25" >
+		<Verifier>3081b330818c06072a8648ce3d0201308180020101301c06072a8648ce3d0101021100ff
+fffffdffffffffffffffffffffffff30240410fffffffdfffffffffffffffffffffffc04
+10e87579c11079f43dd824993c2cee5ed3042104161ff7528b899b2d0c28607ca52c5b86
+cf5ac8395bafeb13c02da292dded7a83021100fffffffe0000000075a30d1b9038a11502
+010103220004331996964fea03a76b62d704b70fc67f033d2f06820d3f5a7bdfb465ae78
+f155</Verifier>
+		<Terms Uses="" >Full</Terms>
+		AxCrypt
+	</Restrictions>
+</Configuration>

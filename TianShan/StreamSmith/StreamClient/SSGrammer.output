@@ -1,0 +1,716 @@
+Grammar
+
+    0 $accept: prog $end
+
+    1 prog: NL
+    2     | cmd NL
+
+    3 cmd: HELP
+    4    | EXIT
+    5    | SLEEP INTEGER
+    6    | CONNECT STR
+    7    | DISCON
+    8    | VERBOSE TF
+    9    | LIST content
+   10    | CREATE createargs
+   11    | CREATEUDP ADDR INTEGER INTEGER
+   12    | CREATEUDP ADDR INTEGER
+   13    | PUSH STR INTEGER
+   14    | PUSHF STR STR INTEGER
+   15    | PLAY
+   16    | PLAY INTEGER
+   17    | PLAY FRAC INTEGER POS
+   18    | PAUSE
+   19    | RESUME
+   20    | SEEK INTEGER
+   21    | SEEK INTEGER POS
+   22    | SEEKITEM seekargs
+   23    | SPEED FRAC
+   24    | RATE INTEGER
+   25    | ERASE INTEGER
+   26    | DESTROY
+   27    | DESTROY ALL
+   28    | SELECT STR
+   29    | SELECT INTEGER
+   30    | ALIAS STR STR
+   31    | CURR
+   32    | INFO
+   33    | MACADDR STR
+   34    | CLEAR
+   35    | error
+
+   36 content: /* empty */
+   37        | ITEM
+   38        | STREAMER
+   39        | error
+
+   40 createargs: ADDR INTEGER INTEGER
+   41           | ADDR INTEGER STR
+   42           | ADDR INTEGER
+   43           | error
+
+   44 seekargs: INTEGER INTEGER POS FRAC
+   45         | INTEGER INTEGER POS
+   46         | INTEGER INTEGER
+   47         | error
+
+
+Terminals, with rules where they appear
+
+$end (0) 0
+error (256) 35 39 43 47
+HELP (258) 3
+EXIT (259) 4
+SLEEP (260) 5
+CLEAR (261) 34
+CONNECT (262) 6
+DISCON (263) 7
+LIST (264) 9
+CREATE (265) 10
+PUSH (266) 13
+PUSHF (267) 14
+PLAY (268) 15 16 17
+PAUSE (269) 18
+RESUME (270) 19
+SEEK (271) 20 21
+SEEKITEM (272) 22
+SPEED (273) 23
+RATE (274) 24
+ERASE (275) 25
+CREATEUDP (276) 11 12
+DESTROY (277) 26 27
+SELECT (278) 28 29
+ALIAS (279) 30
+CURR (280) 31
+INFO (281) 32
+MACADDR (282) 33
+VERBOSE (283) 8
+STREAMER (284) 38
+ITEM (285) 37
+ALL (286) 27
+INTEGER (287) 5 11 12 13 14 16 17 20 21 24 25 29 40 41 42 44 45 46
+TF (288) 8
+NL (289) 1 2
+POS (290) 17 21 44 45
+FRAC (291) 17 23 44
+STR (292) 6 13 14 28 30 33 41
+ADDR (293) 11 12 40 41 42
+
+
+Nonterminals, with rules where they appear
+
+$accept (39)
+    on left: 0
+prog (40)
+    on left: 1 2, on right: 0
+cmd (41)
+    on left: 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23
+    24 25 26 27 28 29 30 31 32 33 34 35, on right: 2
+content (42)
+    on left: 36 37 38 39, on right: 9
+createargs (43)
+    on left: 40 41 42 43, on right: 10
+seekargs (44)
+    on left: 44 45 46 47, on right: 22
+
+
+state 0
+
+    0 $accept: . prog $end
+
+    error      shift, and go to state 1
+    HELP       shift, and go to state 2
+    EXIT       shift, and go to state 3
+    SLEEP      shift, and go to state 4
+    CLEAR      shift, and go to state 5
+    CONNECT    shift, and go to state 6
+    DISCON     shift, and go to state 7
+    LIST       shift, and go to state 8
+    CREATE     shift, and go to state 9
+    PUSH       shift, and go to state 10
+    PUSHF      shift, and go to state 11
+    PLAY       shift, and go to state 12
+    PAUSE      shift, and go to state 13
+    RESUME     shift, and go to state 14
+    SEEK       shift, and go to state 15
+    SEEKITEM   shift, and go to state 16
+    SPEED      shift, and go to state 17
+    RATE       shift, and go to state 18
+    ERASE      shift, and go to state 19
+    CREATEUDP  shift, and go to state 20
+    DESTROY    shift, and go to state 21
+    SELECT     shift, and go to state 22
+    ALIAS      shift, and go to state 23
+    CURR       shift, and go to state 24
+    INFO       shift, and go to state 25
+    MACADDR    shift, and go to state 26
+    VERBOSE    shift, and go to state 27
+    NL         shift, and go to state 28
+
+    prog  go to state 29
+    cmd   go to state 30
+
+
+state 1
+
+   35 cmd: error .
+
+    $default  reduce using rule 35 (cmd)
+
+
+state 2
+
+    3 cmd: HELP .
+
+    $default  reduce using rule 3 (cmd)
+
+
+state 3
+
+    4 cmd: EXIT .
+
+    $default  reduce using rule 4 (cmd)
+
+
+state 4
+
+    5 cmd: SLEEP . INTEGER
+
+    INTEGER  shift, and go to state 31
+
+
+state 5
+
+   34 cmd: CLEAR .
+
+    $default  reduce using rule 34 (cmd)
+
+
+state 6
+
+    6 cmd: CONNECT . STR
+
+    STR  shift, and go to state 32
+
+
+state 7
+
+    7 cmd: DISCON .
+
+    $default  reduce using rule 7 (cmd)
+
+
+state 8
+
+    9 cmd: LIST . content
+
+    error     shift, and go to state 33
+    STREAMER  shift, and go to state 34
+    ITEM      shift, and go to state 35
+
+    NL  reduce using rule 36 (content)
+
+    content  go to state 36
+
+
+state 9
+
+   10 cmd: CREATE . createargs
+
+    error  shift, and go to state 37
+    ADDR   shift, and go to state 38
+
+    createargs  go to state 39
+
+
+state 10
+
+   13 cmd: PUSH . STR INTEGER
+
+    STR  shift, and go to state 40
+
+
+state 11
+
+   14 cmd: PUSHF . STR STR INTEGER
+
+    STR  shift, and go to state 41
+
+
+state 12
+
+   15 cmd: PLAY .
+   16    | PLAY . INTEGER
+   17    | PLAY . FRAC INTEGER POS
+
+    INTEGER  shift, and go to state 42
+    FRAC     shift, and go to state 43
+
+    $default  reduce using rule 15 (cmd)
+
+
+state 13
+
+   18 cmd: PAUSE .
+
+    $default  reduce using rule 18 (cmd)
+
+
+state 14
+
+   19 cmd: RESUME .
+
+    $default  reduce using rule 19 (cmd)
+
+
+state 15
+
+   20 cmd: SEEK . INTEGER
+   21    | SEEK . INTEGER POS
+
+    INTEGER  shift, and go to state 44
+
+
+state 16
+
+   22 cmd: SEEKITEM . seekargs
+
+    error    shift, and go to state 45
+    INTEGER  shift, and go to state 46
+
+    seekargs  go to state 47
+
+
+state 17
+
+   23 cmd: SPEED . FRAC
+
+    FRAC  shift, and go to state 48
+
+
+state 18
+
+   24 cmd: RATE . INTEGER
+
+    INTEGER  shift, and go to state 49
+
+
+state 19
+
+   25 cmd: ERASE . INTEGER
+
+    INTEGER  shift, and go to state 50
+
+
+state 20
+
+   11 cmd: CREATEUDP . ADDR INTEGER INTEGER
+   12    | CREATEUDP . ADDR INTEGER
+
+    ADDR  shift, and go to state 51
+
+
+state 21
+
+   26 cmd: DESTROY .
+   27    | DESTROY . ALL
+
+    ALL  shift, and go to state 52
+
+    $default  reduce using rule 26 (cmd)
+
+
+state 22
+
+   28 cmd: SELECT . STR
+   29    | SELECT . INTEGER
+
+    INTEGER  shift, and go to state 53
+    STR      shift, and go to state 54
+
+
+state 23
+
+   30 cmd: ALIAS . STR STR
+
+    STR  shift, and go to state 55
+
+
+state 24
+
+   31 cmd: CURR .
+
+    $default  reduce using rule 31 (cmd)
+
+
+state 25
+
+   32 cmd: INFO .
+
+    $default  reduce using rule 32 (cmd)
+
+
+state 26
+
+   33 cmd: MACADDR . STR
+
+    STR  shift, and go to state 56
+
+
+state 27
+
+    8 cmd: VERBOSE . TF
+
+    TF  shift, and go to state 57
+
+
+state 28
+
+    1 prog: NL .
+
+    $default  reduce using rule 1 (prog)
+
+
+state 29
+
+    0 $accept: prog . $end
+
+    $end  shift, and go to state 58
+
+
+state 30
+
+    2 prog: cmd . NL
+
+    NL  shift, and go to state 59
+
+
+state 31
+
+    5 cmd: SLEEP INTEGER .
+
+    $default  reduce using rule 5 (cmd)
+
+
+state 32
+
+    6 cmd: CONNECT STR .
+
+    $default  reduce using rule 6 (cmd)
+
+
+state 33
+
+   39 content: error .
+
+    $default  reduce using rule 39 (content)
+
+
+state 34
+
+   38 content: STREAMER .
+
+    $default  reduce using rule 38 (content)
+
+
+state 35
+
+   37 content: ITEM .
+
+    $default  reduce using rule 37 (content)
+
+
+state 36
+
+    9 cmd: LIST content .
+
+    $default  reduce using rule 9 (cmd)
+
+
+state 37
+
+   43 createargs: error .
+
+    $default  reduce using rule 43 (createargs)
+
+
+state 38
+
+   40 createargs: ADDR . INTEGER INTEGER
+   41           | ADDR . INTEGER STR
+   42           | ADDR . INTEGER
+
+    INTEGER  shift, and go to state 60
+
+
+state 39
+
+   10 cmd: CREATE createargs .
+
+    $default  reduce using rule 10 (cmd)
+
+
+state 40
+
+   13 cmd: PUSH STR . INTEGER
+
+    INTEGER  shift, and go to state 61
+
+
+state 41
+
+   14 cmd: PUSHF STR . STR INTEGER
+
+    STR  shift, and go to state 62
+
+
+state 42
+
+   16 cmd: PLAY INTEGER .
+
+    $default  reduce using rule 16 (cmd)
+
+
+state 43
+
+   17 cmd: PLAY FRAC . INTEGER POS
+
+    INTEGER  shift, and go to state 63
+
+
+state 44
+
+   20 cmd: SEEK INTEGER .
+   21    | SEEK INTEGER . POS
+
+    POS  shift, and go to state 64
+
+    $default  reduce using rule 20 (cmd)
+
+
+state 45
+
+   47 seekargs: error .
+
+    $default  reduce using rule 47 (seekargs)
+
+
+state 46
+
+   44 seekargs: INTEGER . INTEGER POS FRAC
+   45         | INTEGER . INTEGER POS
+   46         | INTEGER . INTEGER
+
+    INTEGER  shift, and go to state 65
+
+
+state 47
+
+   22 cmd: SEEKITEM seekargs .
+
+    $default  reduce using rule 22 (cmd)
+
+
+state 48
+
+   23 cmd: SPEED FRAC .
+
+    $default  reduce using rule 23 (cmd)
+
+
+state 49
+
+   24 cmd: RATE INTEGER .
+
+    $default  reduce using rule 24 (cmd)
+
+
+state 50
+
+   25 cmd: ERASE INTEGER .
+
+    $default  reduce using rule 25 (cmd)
+
+
+state 51
+
+   11 cmd: CREATEUDP ADDR . INTEGER INTEGER
+   12    | CREATEUDP ADDR . INTEGER
+
+    INTEGER  shift, and go to state 66
+
+
+state 52
+
+   27 cmd: DESTROY ALL .
+
+    $default  reduce using rule 27 (cmd)
+
+
+state 53
+
+   29 cmd: SELECT INTEGER .
+
+    $default  reduce using rule 29 (cmd)
+
+
+state 54
+
+   28 cmd: SELECT STR .
+
+    $default  reduce using rule 28 (cmd)
+
+
+state 55
+
+   30 cmd: ALIAS STR . STR
+
+    STR  shift, and go to state 67
+
+
+state 56
+
+   33 cmd: MACADDR STR .
+
+    $default  reduce using rule 33 (cmd)
+
+
+state 57
+
+    8 cmd: VERBOSE TF .
+
+    $default  reduce using rule 8 (cmd)
+
+
+state 58
+
+    0 $accept: prog $end .
+
+    $default  accept
+
+
+state 59
+
+    2 prog: cmd NL .
+
+    $default  reduce using rule 2 (prog)
+
+
+state 60
+
+   40 createargs: ADDR INTEGER . INTEGER
+   41           | ADDR INTEGER . STR
+   42           | ADDR INTEGER .
+
+    INTEGER  shift, and go to state 68
+    STR      shift, and go to state 69
+
+    $default  reduce using rule 42 (createargs)
+
+
+state 61
+
+   13 cmd: PUSH STR INTEGER .
+
+    $default  reduce using rule 13 (cmd)
+
+
+state 62
+
+   14 cmd: PUSHF STR STR . INTEGER
+
+    INTEGER  shift, and go to state 70
+
+
+state 63
+
+   17 cmd: PLAY FRAC INTEGER . POS
+
+    POS  shift, and go to state 71
+
+
+state 64
+
+   21 cmd: SEEK INTEGER POS .
+
+    $default  reduce using rule 21 (cmd)
+
+
+state 65
+
+   44 seekargs: INTEGER INTEGER . POS FRAC
+   45         | INTEGER INTEGER . POS
+   46         | INTEGER INTEGER .
+
+    POS  shift, and go to state 72
+
+    $default  reduce using rule 46 (seekargs)
+
+
+state 66
+
+   11 cmd: CREATEUDP ADDR INTEGER . INTEGER
+   12    | CREATEUDP ADDR INTEGER .
+
+    INTEGER  shift, and go to state 73
+
+    $default  reduce using rule 12 (cmd)
+
+
+state 67
+
+   30 cmd: ALIAS STR STR .
+
+    $default  reduce using rule 30 (cmd)
+
+
+state 68
+
+   40 createargs: ADDR INTEGER INTEGER .
+
+    $default  reduce using rule 40 (createargs)
+
+
+state 69
+
+   41 createargs: ADDR INTEGER STR .
+
+    $default  reduce using rule 41 (createargs)
+
+
+state 70
+
+   14 cmd: PUSHF STR STR INTEGER .
+
+    $default  reduce using rule 14 (cmd)
+
+
+state 71
+
+   17 cmd: PLAY FRAC INTEGER POS .
+
+    $default  reduce using rule 17 (cmd)
+
+
+state 72
+
+   44 seekargs: INTEGER INTEGER POS . FRAC
+   45         | INTEGER INTEGER POS .
+
+    FRAC  shift, and go to state 74
+
+    $default  reduce using rule 45 (seekargs)
+
+
+state 73
+
+   11 cmd: CREATEUDP ADDR INTEGER INTEGER .
+
+    $default  reduce using rule 11 (cmd)
+
+
+state 74
+
+   44 seekargs: INTEGER INTEGER POS FRAC .
+
+    $default  reduce using rule 44 (seekargs)

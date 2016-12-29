@@ -1,0 +1,52 @@
+#!/bin/bash
+
+. /etc/init.d/functions
+
+PIDFILE=/var/run/Naming_Service.pid
+PORT=
+
+OPTIONS="-p ${PIDFILE}"
+
+RETVAL=0
+prog="Naming_Service"
+
+start() {
+	echo -n $"Starting $prog: "
+	if [ $UID -ne 0 ]; then
+		RETVAL=1
+		failure
+	else
+		setsid /usr/local/bin/Naming_Service ${OPTIONS} &
+		RETVAL=$?
+	fi
+	echo 
+	return $RETVAL
+}
+
+stop() {
+	echo -n $"Stopping $prog: "
+	if [ $UID -ne 0 ]; then
+		RETVAL=1
+		failure
+	else
+		killproc /usr/local/bin/Naming_Service
+		RETVAL=$?
+	fi
+	echo
+	return $RETVAL
+}
+
+restart(){
+	stop
+	start
+}
+
+case "$1" in
+  start) start ;;
+  stop) stop ;;
+  restart) restart ;;
+  status) status -p ${PIDFILE} ${prog}; RETVAL=$?  ;;
+  *) echo "Usage: $0 {start|stop|status|restart}"; RETVAL=1
+esac
+
+exit $RETVAL

@@ -1,0 +1,5 @@
+cdmifuse (1-1) unstable; urgency=low
+
+  * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
+
+ -- build <build@unknown>  Fri, 26 Jul 2013 13:27:13 +0800
